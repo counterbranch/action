@@ -1,5 +1,8 @@
-name: Counterbranch static comparison
-description: Compare static authorization coverage between two Git revisions with the scanner-only edition.
+name: Counterbranch — Access-control change review
+description: Review access-control code changes in pull requests, with plain-English findings, source links, and downloadable evidence.
+branding:
+  icon: shield
+  color: blue
 
 inputs:
   repository:

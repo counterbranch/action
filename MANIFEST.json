@@ -2,7 +2,7 @@
   "build": {
     "access_mode": "open",
     "exporter_sha256": "b2fc881a6416527d8cb2d1cb91aa8520ddabcbb2c84200dc84b9cbc5d4f0fb32",
-    "source_date_epoch": 1791242705
+    "source_date_epoch": 1791243938
   },
   "edition": "scanner-only",
   "files": {
@@ -33,8 +33,8 @@
     },
     "action.yml": {
       "mode": "0644",
-      "sha256": "5124d85398735fc1915fcbc04bb8fe75f72a3b0ddd30de07937f58c753c02935",
-      "size": 11024
+      "sha256": "f1b062fcd7144c7fa52f28d2208c8cd2eee4d4dc2572418a3872707663dfbd35",
+      "size": 11106
     },
     "comment.py": {
       "mode": "0755",
@@ -99,7 +99,7 @@
   },
   "source": {
     "distribution_clean": true,
-    "git_commit": "5edface1af8584705abb190a019c33298f53213f",
-    "git_tree": "9b33748b7116710c9f35284a7a49ae8dcd532cae"
+    "git_commit": "20c3111a33b98ffbf956e77af3aea3c8809bd1d4",
+    "git_tree": "77665e6d43d4ddaead77ce701bd00fd55d2c8651"
   }
 }
