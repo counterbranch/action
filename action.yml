@@ -1,0 +1,240 @@
+name: Counterbranch static comparison
+description: Compare static authorization coverage between two Git revisions with the scanner-only edition.
+
+inputs:
+  repository:
+    description: Absolute checkout path containing base, head, and their merge base; full history is required.
+    required: true
+  base:
+    description: Exact lowercase 40-character target-side commit.
+    required: true
+  head:
+    description: Exact lowercase 40-character candidate commit.
+    required: true
+  profile:
+    description: Optional static scan bounds profile (default, large, or xl).
+    required: false
+    default: ""
+  timeout-seconds:
+    description: Whole paired-comparison deadline from 1 to 3600 seconds; scan profiles retain their internal bounds.
+    required: false
+    default: "1800"
+  signup-token:
+    description: Reserved signup integration token. Token presence does not authenticate or authorize this Action.
+    required: false
+    default: ""
+  post-comment:
+    description: Post or update one commit-bound GitHub Actions bot comment on a same-repository pull request.
+    required: false
+    default: "false"
+  report-retention-days:
+    description: Requested automatic report ZIP retention from 1 to 400 days, subject to GitHub repository and organization limits; ignored when post-comment is false.
+    required: false
+    default: "7"
+
+outputs:
+  outcome:
+    description: CLEAN, INCOMPLETE, NEEDS_OWNER_REVIEW, or UNKNOWN.
+    value: ${{ steps.run.outputs.outcome || steps.failure.outputs.outcome }}
+  has_incomplete:
+    description: Whether the validated static assessment contains incomplete evidence.
+    value: ${{ steps.run.outputs.has_incomplete || steps.failure.outputs.has_incomplete }}
+  report:
+    description: Path to the validated JSON comparison.
+    value: ${{ steps.run.outputs.report }}
+  markdown_report:
+    description: Path to the saved Markdown report.
+    value: ${{ steps.run.outputs.markdown_report || steps.failure.outputs.markdown_report }}
+  run_directory:
+    description: Path to the static Discovery run directory.
+    value: ${{ steps.run.outputs.run_directory || steps.failure.outputs.run_directory }}
+  merge_base:
+    description: Exact merge base compared with head.
+    value: ${{ steps.run.outputs.merge_base }}
+  report_bundle:
+    description: Directory containing the bounded agent-readable report artifact files.
+    value: ${{ steps.bundle.outputs.report_bundle }}
+  report_artifact_url:
+    description: Workflow-managed report ZIP URL when post-comment is enabled and upload succeeds.
+    value: ${{ steps.upload.outputs.artifact-url }}
+  comment_url:
+    description: Published pull request comment URL, or empty when commenting is disabled or unsupported.
+    value: ${{ steps.comment.outputs.comment_url }}
+
+runs:
+  using: composite
+  steps:
+    - id: delivery_inputs
+      shell: bash
+      env:
+        COUNTERBRANCH_ACTION_POST_COMMENT: ${{ inputs.post-comment }}
+        COUNTERBRANCH_ACTION_REPORT_RETENTION_DAYS: ${{ inputs.report-retention-days }}
+      run: |
+        set -euo pipefail
+        if [[ "$COUNTERBRANCH_ACTION_POST_COMMENT" != 'true' && "$COUNTERBRANCH_ACTION_POST_COMMENT" != 'false' ]]; then
+          echo 'post-comment must be exactly true or false' >&2
+          exit 1
+        fi
+        if [[ "$COUNTERBRANCH_ACTION_POST_COMMENT" == 'true' && ! "$COUNTERBRANCH_ACTION_REPORT_RETENTION_DAYS" =~ ^([1-9]|[1-9][0-9]|[1-3][0-9]{2}|400)$ ]]; then
+          echo 'report-retention-days must be an integer from 1 to 400' >&2
+          exit 1
+        fi
+        if [[ "$COUNTERBRANCH_ACTION_POST_COMMENT" == 'true' ]]; then
+          echo "report_retention_days=$COUNTERBRANCH_ACTION_REPORT_RETENTION_DAYS" >> "$GITHUB_OUTPUT"
+        fi
+    - id: preflight
+      shell: bash
+      env:
+        COUNTERBRANCH_ACTION_SIGNUP_TOKEN: ${{ inputs.signup-token }}
+        COUNTERBRANCH_ACTION_ACCESS_MODE: open
+      run: |
+        set -euo pipefail
+        python3 "$GITHUB_ACTION_PATH/run.py" --preflight "$GITHUB_ACTION_PATH/release-manifest.json"
+        python3 "$GITHUB_ACTION_PATH/acquire.py" --preflight \
+          --manifest "$GITHUB_ACTION_PATH/release-manifest.json"
+    - id: cosign
+      uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      with:
+        cosign-release: v3.0.6
+    - id: prepare
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        STATE="$(mktemp -d "$RUNNER_TEMP/counterbranch-action.XXXXXX")"
+        export GH_CONFIG_DIR="$STATE/gh-config"
+        python3 "$GITHUB_ACTION_PATH/acquire.py" --kit \
+          --output "$STATE/counterbranch-scanner-kit.tar.gz" \
+          > "$STATE/release.json"
+        KIT_SHA256="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$STATE/release.json")"
+        KIT_TARGET="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["target"])' "$STATE/release.json")"
+        python3 "$GITHUB_ACTION_PATH/scanner_kit.py" \
+          --archive "$STATE/counterbranch-scanner-kit.tar.gz" \
+          --sha256 "$KIT_SHA256" \
+          --release-manifest "$GITHUB_ACTION_PATH/release-manifest.json" \
+          --target "$KIT_TARGET" --prefix "$STATE/kit"
+        printf '%s\n' "COUNTERBRANCH_SCANNER_BINARY=$STATE/kit/bin/counterbranch" >> "$GITHUB_ENV"
+    - id: run
+      shell: bash
+      env:
+        COUNTERBRANCH_ACTION_BINARY: ${{ env.COUNTERBRANCH_SCANNER_BINARY }}
+        COUNTERBRANCH_ACTION_REPOSITORY: ${{ inputs.repository }}
+        COUNTERBRANCH_ACTION_BASE: ${{ inputs.base }}
+        COUNTERBRANCH_ACTION_HEAD: ${{ inputs.head }}
+        COUNTERBRANCH_ACTION_PROFILE: ${{ inputs.profile }}
+        COUNTERBRANCH_ACTION_TIMEOUT_SECONDS: ${{ inputs.timeout-seconds }}
+        COUNTERBRANCH_ACTION_SIGNUP_TOKEN: ${{ inputs.signup-token }}
+        COUNTERBRANCH_ACTION_ACCESS_MODE: open
+      run: python3 "$GITHUB_ACTION_PATH/run.py"
+    - id: failure
+      if: failure()
+      shell: bash
+      run: |
+        set -euo pipefail
+        FAILURE_DIRECTORY="$(mktemp -d "$RUNNER_TEMP/counterbranch-report-failure.XXXXXX")"
+        FAILURE_MARKDOWN="$FAILURE_DIRECTORY/report.md"
+        cat > "$FAILURE_MARKDOWN" <<'EOF'
+        # Counterbranch static comparison
+
+        Outcome: **UNKNOWN**
+
+        Static comparison setup, acquisition, scanning, or validation failed before a complete result was available.
+        This is not a clean result. Inspect the workflow failure before relying on this artifact.
+        EOF
+        {
+          echo 'outcome=UNKNOWN'
+          echo 'has_incomplete=true'
+          echo "markdown_report=$FAILURE_MARKDOWN"
+          echo "run_directory=$FAILURE_DIRECTORY"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo '## Counterbranch static comparison'
+          echo
+          echo 'Outcome: **UNKNOWN**'
+          echo
+          echo 'Static comparison setup, acquisition, authentication, or validation failed before a complete result was available.'
+        } >> "$GITHUB_STEP_SUMMARY"
+    - id: bundle
+      if: ${{ always() && !cancelled() }}
+      shell: bash
+      env:
+        REPORT: ${{ steps.run.outputs.report }}
+        MARKDOWN_REPORT: ${{ steps.run.outputs.markdown_report || steps.failure.outputs.markdown_report }}
+        RUN_DIRECTORY: ${{ steps.run.outputs.run_directory || steps.failure.outputs.run_directory }}
+        OUTCOME: ${{ steps.run.outputs.outcome || steps.failure.outputs.outcome }}
+        HAS_INCOMPLETE: ${{ steps.run.outputs.has_incomplete || steps.failure.outputs.has_incomplete }}
+        MERGE_BASE: ${{ steps.run.outputs.merge_base }}
+        REPOSITORY: ${{ github.repository }}
+        BASE: ${{ inputs.base }}
+        HEAD: ${{ inputs.head }}
+        RUN_ID: ${{ github.run_id }}
+        RUN_ATTEMPT: ${{ github.run_attempt }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        if [[ -n "$REPORT" ]]; then
+          BUNDLE_DIRECTORY="$(dirname "$REPORT")/agent-report"
+          REPORT_ARGUMENTS=(--report "$REPORT" --merge-base "$MERGE_BASE")
+        else
+          BUNDLE_DIRECTORY="$RUN_DIRECTORY/agent-report"
+          REPORT_ARGUMENTS=()
+        fi
+        python3 "$GITHUB_ACTION_PATH/report_bundle.py" \
+          "${REPORT_ARGUMENTS[@]}" \
+          --markdown "$MARKDOWN_REPORT" \
+          --run-directory "$RUN_DIRECTORY" \
+          --output-directory "$BUNDLE_DIRECTORY" \
+          --outcome "$OUTCOME" \
+          --incomplete "$HAS_INCOMPLETE" \
+          --repository "$REPOSITORY" \
+          --base "$BASE" \
+          --head "$HEAD" \
+          --run-id "$RUN_ID" \
+          --run-attempt "$RUN_ATTEMPT" \
+          --run-url "$RUN_URL"
+        echo "report_bundle=$BUNDLE_DIRECTORY" >> "$GITHUB_OUTPUT"
+        BUNDLE_NONCE="$(python3 -c 'import secrets; print(secrets.token_hex(8))')"
+        echo "artifact_name=counterbranch-report-$RUN_ID-$RUN_ATTEMPT-$BUNDLE_NONCE" >> "$GITHUB_OUTPUT"
+    - id: upload
+      if: ${{ always() && !cancelled() && inputs.post-comment == 'true' && steps.delivery_inputs.outcome == 'success' && steps.bundle.outcome == 'success' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ steps.bundle.outputs.artifact_name }}
+        path: ${{ steps.bundle.outputs.report_bundle }}
+        if-no-files-found: error
+        retention-days: ${{ steps.delivery_inputs.outputs.report_retention_days }}
+    - id: comment
+      if: ${{ always() && !cancelled() && inputs.post-comment == 'true' && steps.delivery_inputs.outcome == 'success' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        POST_COMMENT: ${{ inputs.post-comment }}
+        REPORT: ${{ steps.run.outputs.report }}
+        OUTCOME: ${{ steps.run.outputs.outcome || steps.failure.outputs.outcome }}
+        HAS_INCOMPLETE: ${{ steps.run.outputs.has_incomplete || steps.failure.outputs.has_incomplete }}
+        MERGE_BASE: ${{ steps.run.outputs.merge_base }}
+        ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        REPORT_RETENTION_DAYS: ${{ steps.delivery_inputs.outputs.report_retention_days }}
+        ACTION_BASE: ${{ inputs.base }}
+        ACTION_HEAD: ${{ inputs.head }}
+      run: |
+        set -euo pipefail
+        if [[ "$POST_COMMENT" != 'true' ]]; then
+          echo 'post-comment must be exactly true or false' >&2
+          exit 1
+        fi
+        python3 "$GITHUB_ACTION_PATH/comment.py" \
+          --event "$GITHUB_EVENT_PATH" \
+          --event-name "$GITHUB_EVENT_NAME" \
+          --repository "$GITHUB_REPOSITORY" \
+          --base "$ACTION_BASE" \
+          --head "$ACTION_HEAD" \
+          --merge-base "$MERGE_BASE" \
+          --report "$REPORT" \
+          --outcome "$OUTCOME" \
+          --incomplete "$HAS_INCOMPLETE" \
+          --artifact-url "$ARTIFACT_URL" \
+          --retention-days "$REPORT_RETENTION_DAYS" \
+          --run-id "$GITHUB_RUN_ID" \
+          --run-attempt "$GITHUB_RUN_ATTEMPT"
