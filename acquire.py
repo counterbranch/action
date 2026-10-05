@@ -235,17 +235,16 @@ def download_gh(gh: str, repository: str, tag: str, name: str, destination: Path
         )
     except OSError as error:
         raise RuntimeError("GitHub release download could not start") from error
-    stderr = bytearray(); overflow = False
+    stderr_bytes = 0; overflow = False
     deadline = time.monotonic() + DOWNLOAD_TIMEOUT
     timer = threading.Timer(DOWNLOAD_TIMEOUT, process.kill)
     timer.daemon = True
     timer.start()
     def drain_stderr():
-        nonlocal overflow
+        nonlocal stderr_bytes, overflow
         while chunk := process.stderr.read(64 * 1024):
-            remaining = MAX_VERIFIER_OUTPUT - len(stderr)
-            if remaining > 0: stderr.extend(chunk[:remaining])
-            if len(chunk) > remaining: overflow = True
+            stderr_bytes = min(MAX_VERIFIER_OUTPUT + 1, stderr_bytes + len(chunk))
+            if stderr_bytes > MAX_VERIFIER_OUTPUT: overflow = True
     reader = threading.Thread(target=drain_stderr, daemon=True); reader.start()
     total = 0
     try:
@@ -259,10 +258,17 @@ def download_gh(gh: str, repository: str, tag: str, name: str, destination: Path
                 output.write(chunk)
             output.flush(); os.fsync(output.fileno())
         status = process.wait()
+        reader.join(timeout=5)
+        if reader.is_alive():
+            raise RuntimeError("GitHub release download output could not be drained")
         if time.monotonic() > deadline:
             raise RuntimeError("GitHub release download timed out")
         if overflow or status != 0 or total != size:
-            raise RuntimeError("GitHub release download failed or returned an unexpected size")
+            raise RuntimeError(
+                "GitHub release download failed "
+                f"(exit_status={status}, actual_bytes={total}, expected_bytes={size}, "
+                f"stderr_overflow={str(overflow).lower()})"
+            )
     finally:
         timer.cancel()
         if process.poll() is None:
