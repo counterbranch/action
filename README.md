@@ -43,7 +43,7 @@ merge approval, and `CLEAN` applies only to the supported static comparison.
 ## Status
 
 Pre-release development. Use only versions listed in
-[Releases](https://github.com/counterbranch/scanner-action/releases). Each
+[Releases](https://github.com/counterbranch/action/releases). Each
 published release includes the tested commit, qualification scope, and a
 workflow pinned to that commit.
 
