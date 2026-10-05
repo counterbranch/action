@@ -1,0 +1,121 @@
+Counterbranch Software License
+Version 1.0
+
+Copyright 2026 DUVATL, Inc. and contributors, for their respective contributions.
+
+1. Scope and existing rights
+
+DUVATL, Inc. ("Licensor") offers the Counterbranch software accompanying these
+terms ("Software") under this license, solely to the extent Licensor owns or
+is authorized to license the relevant rights. This license covers Licensor's
+original code and modifications. Third-party components remain subject to
+their applicable licenses and notices supplied with the Software.
+
+Nothing in this license restricts rights you have under an applicable
+third-party license, a license previously granted for the same material, or
+applicable law that cannot be excluded by agreement. In case of conflict,
+those rights prevail for that material. This license does not revoke or amend
+licenses for earlier versions, including any existing future-license grants.
+No automatic conversion to another license is promised for material first
+provided exclusively under this license.
+
+2. Permission to use
+
+Subject to these terms, Licensor grants you a worldwide, non-exclusive,
+no-charge license to download, install, copy and run the Software to analyze
+projects you own or are authorized to assess, including in commercial work
+and continuous integration. You may allow your personnel, contractors and
+computing providers, including hosted CI runners, to run it on your behalf
+for these purposes. Providing copies to those persons solely for these purposes
+is permitted and is not prohibited redistribution under section 3(c). This
+permission does not authorize a provider to offer
+the Software itself as a scanning service to other customers. You may make
+backup copies and retain copies in your organization's build caches. Retain
+the applicable license and notice files with copies you make.
+
+The license does not grant access to source code, paid features, hosted
+services or future versions. If source code is separately provided, its
+access and modification rights must be authorized separately in writing or
+under another applicable license.
+
+3. Restrictions
+
+Except as permitted in section 1, section 2 or a separate written agreement
+with Licensor, you may not:
+
+(a) modify, adapt or create derivative works of the Software;
+(b) reverse engineer, decompile, disassemble or otherwise attempt to recover
+    source code from the Software;
+(c) redistribute, sell or sublicense the Software, or make it available to
+    others as a standalone product or hosted scanning service; or
+(d) remove applicable copyright, license or attribution notices, or bypass
+    technical controls restricting access to features you are not licensed
+    to use.
+
+The reverse-engineering restriction does not prohibit acts permitted by
+applicable law notwithstanding contractual restrictions, including applicable
+rights of observation, study, testing, error correction and interoperability,
+or acts permitted by licenses preserved under section 1. This license does
+not prohibit independent development without infringement of Licensor's
+rights. Running authorized scans, inspecting and sharing their reports, and
+reporting defects are permitted uses.
+
+4. Your code and reports
+
+You retain your rights in code and data submitted to the Software. Licensor
+does not acquire ownership of that material or your findings by licensing
+the Software. You may use, copy, modify and share reports and generated
+outputs, including with your own analysis tools and agents. To the extent
+Licensor has rights in those outputs, it grants you a perpetual, worldwide,
+non-exclusive, royalty-free license to do so. This does not grant rights in
+third-party material included in an output or authorize disclosure of code
+or data that you are not entitled to share.
+
+5. Experimental software; warranty and liability
+
+The Software may be experimental and may produce incorrect or incomplete
+results. Its reports do not guarantee security, establish intended access
+policy, enforce runtime permissions or approve a change for deployment.
+You are responsible for reviewing results and deciding whether to rely on
+them. No service level, update schedule or particular support response time
+is promised by this license; separately agreed obligations remain in effect.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT.
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LICENSOR SHALL NOT BE LIABLE
+FOR DAMAGES ARISING FROM THIS LICENSE OR THE USE OF OR INABILITY TO USE THE
+SOFTWARE, INCLUDING DIRECT, INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL
+DAMAGES, LOSS OF PROFITS, DATA OR BUSINESS, EVEN IF ADVISED OF THEIR POSSIBILITY.
+NOTHING IN THESE TERMS EXCLUDES OR LIMITS LIABILITY OR RIGHTS THAT APPLICABLE
+LAW DOES NOT ALLOW TO BE EXCLUDED OR LIMITED.
+
+6. Duration and termination
+
+You may terminate this license by stopping use and deleting copies governed
+solely by it. Licensor may terminate the permissions in section 2 if you
+materially breach these terms and fail to remedy that breach within 30 days
+after notice. On termination, stop using and delete copies governed solely
+by this license, except copies you must retain by law and inaccessible
+routine backups until their normal deletion. Such retained copies may not
+be used under this license. Sections 1, 3, 4, 5 and 7 survive termination.
+Termination does not affect your independent rights under section 1 or your
+right to retain and use reports under section 4.
+
+7. General
+
+The Software is licensed, not sold. No trademark rights are granted except
+as needed to identify the Software and reproduce required notices. No other
+rights are granted by implication. These terms apply only to the version
+provided with them; a later change to these terms does not amend your license
+for that version. If a provision is unenforceable, the remaining provisions
+continue to apply to the extent permitted by law. You must comply with
+applicable laws, including applicable export restrictions.
+
+By installing or using the Software after these terms have been made
+available to you, you agree to these terms for rights granted under this
+license. If acting for an organization, you must be authorized to bind it.
+If you do not agree, do not exercise rights granted solely by this license.
+This acceptance provision does not apply to copies received under earlier
+licenses and does not condition or diminish the independent rights preserved
+in section 1.
