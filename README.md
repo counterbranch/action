@@ -42,10 +42,8 @@ merge approval, and `CLEAN` applies only to the supported static comparison.
 
 ## Status
 
-Pre-release development. Use only versions listed in
-[Releases](https://github.com/counterbranch/scanner-action/releases). Each
-published release includes the tested commit, qualification scope, and a
-workflow pinned to that commit.
+Pre-release candidate using scanner kit v0.42.8. Hosted installation, report
+retention, and PR comment qualification are pending for this Action revision.
 
 ## Requirements
 
@@ -106,7 +104,16 @@ Publication errors remain Action failures.
 ## Versions
 
 Action releases and scanner kit releases are versioned separately. This
-snapshot uses the signed [scanner kit v0.41.3](https://github.com/counterbranch/alpha-releases/releases/tag/v0.41.3),
-containing Counterbranch 0.41.3 and Discovery 0.24.0. The Action verifies the
+candidate uses the signed [scanner kit v0.42.8](https://github.com/counterbranch/alpha-releases/releases/tag/v0.42.8),
+containing Counterbranch 0.42.8 and Discovery 0.24.1. The Action verifies the
 kit's release identity, signature, checksum, size, and platform before running
 its executables. No signup is required for this build.
+
+## License
+
+The Action wrapper is licensed separately under Apache-2.0. Downloaded
+Counterbranch and Discovery binaries remain subject to their applicable terms,
+which are included at `share/counterbranch/licenses/counterbranch/LICENSE`
+and `share/counterbranch/licenses/discovery/LICENSE` in the signed kit, with
+applicable notices alongside them. The new product terms permit using and
+sharing reports, including with your own agent; they preserve third-party rights.
