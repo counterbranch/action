@@ -45,6 +45,55 @@ merge approval, and `CLEAN` applies only to the supported static comparison.
 Pre-release candidate using scanner kit v0.42.8. Hosted installation, report
 retention, and PR comment qualification are pending for this Action revision.
 
+## Add to your workflow
+
+Save this as `.github/workflows/counterbranch.yml`, commit it to your default
+branch, then open a pull request from a branch in the same repository. The
+workflow downloads the signed scanner kit, compares the PR revisions, and
+posts findings with a report ZIP. This example pins the candidate undergoing
+hosted qualification; see the status above.
+
+```yaml
+name: Counterbranch
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: counterbranch-scanner-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: counterbranch/action@090a8411eb8af20d422778d99ab824e19f9a6a15
+        with:
+          repository: ${{ github.workspace }}
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          post-comment: 'true'
+          timeout-seconds: '300'
+```
+
+The example skips fork PRs. Repository or organization settings must allow
+GitHub Actions and a token with pull-request write permission. Use this as
+the repository's only Counterbranch comment publisher; see [PR comments](#pr-comments).
+The default report retention request is seven days.
+
 ## Requirements
 
 - An `ubuntu-24.04` x86_64 GNU/Linux runner.
