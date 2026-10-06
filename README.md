@@ -42,16 +42,19 @@ merge approval, and `CLEAN` applies only to the supported static comparison.
 
 ## Status
 
-Pre-release candidate using scanner kit v0.42.8. Hosted installation, report
-retention, and PR comment qualification are pending for this Action revision.
+Alpha. Action [`090a841`](https://github.com/counterbranch/action/commit/090a8411eb8af20d422778d99ab824e19f9a6a15)
+with scanner kit v0.42.8 passed controlled Ubuntu 24.04 GitHub Actions checks
+on 6 October 2026: public kit acquisition, the reported outcomes above, report
+ZIP downloads, PR comment updates, and requested retention of seven and 14 days.
+These checks used synthetic fixtures; they do not establish runtime access correctness.
 
 ## Add to your workflow
 
 Save this as `.github/workflows/counterbranch.yml`, commit it to your default
 branch, then open a pull request from a branch in the same repository. The
 workflow downloads the signed scanner kit, compares the PR revisions, and
-posts findings with a report ZIP. This example pins the candidate undergoing
-hosted qualification; see the status above.
+posts findings with a report ZIP. This example pins the verified Action revision
+described above.
 
 ```yaml
 name: Counterbranch
@@ -152,8 +155,8 @@ Publication errors remain Action failures.
 
 ## Versions
 
-Action releases and scanner kit releases are versioned separately. This
-candidate uses the signed [scanner kit v0.42.8](https://github.com/counterbranch/alpha-releases/releases/tag/v0.42.8),
+Action releases and scanner kit releases are versioned separately. The
+pinned Action uses the signed [scanner kit v0.42.8](https://github.com/counterbranch/alpha-releases/releases/tag/v0.42.8),
 containing Counterbranch 0.42.8 and Discovery 0.24.1. The Action verifies the
 kit's release identity, signature, checksum, size, and platform before running
 its executables. No signup is required for this build.
